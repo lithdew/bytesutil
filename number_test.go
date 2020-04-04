@@ -61,6 +61,29 @@ func TestAppendNumbers(t *testing.T) {
 	require.NoError(t, quick.Check(f, nil))
 }
 
+func TestVarInt(t *testing.T) {
+	a := func(a uint64, b int64) bool {
+		buf := make([]byte, 0, binary.MaxVarintLen64)
+		buf = AppendUvarInt(buf, a)
+
+		ra, size := UvarInt(buf)
+		if !assert.EqualValues(t, a, ra) || !assert.EqualValues(t, len(buf), size) {
+			return false
+		}
+
+		buf = AppendVarInt(buf[:0], b)
+
+		rb, size := VarInt(buf)
+		if !assert.EqualValues(t, b, rb) || !assert.EqualValues(t, len(buf), size) {
+			return false
+		}
+
+		return true
+	}
+
+	require.NoError(t, quick.Check(a, nil))
+}
+
 func TestAppendVarInt(t *testing.T) {
 	a := func(a uint64, b uint32, c uint16) bool {
 		var buf [binary.MaxVarintLen64]byte

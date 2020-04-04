@@ -20,6 +20,14 @@ func AppendVarInt(dst []byte, n int64) []byte {
 	return AppendUvarInt(dst, un)
 }
 
+func UvarInt(b []byte) (uint64, int) {
+	return binary.Uvarint(b)
+}
+
+func VarInt(b []byte) (int64, int) {
+	return binary.Varint(b)
+}
+
 func AppendUint64LE(dst []byte, n uint64) []byte {
 	return append(dst, byte(n), byte(n>>8), byte(n>>16), byte(n>>24), byte(n>>32), byte(n>>40), byte(n>>48), byte(n>>56))
 }
