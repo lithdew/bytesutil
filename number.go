@@ -2,7 +2,55 @@ package bytesutil
 
 import (
 	"encoding/binary"
+	"math"
 )
+
+func AppendBitcoinUvarInt(dst []byte, v uint64) []byte {
+	if v < 0xfd {
+		return append(dst, byte(v))
+	}
+
+	if v <= math.MaxUint16 {
+		dst = append(dst, 0xfd)
+		dst = AppendUint16LE(dst, uint16(v))
+		return dst
+	}
+
+	if v <= math.MaxUint32 {
+		dst = append(dst, 0xfe)
+		dst = AppendUint32LE(dst, uint32(v))
+		return dst
+	}
+
+	dst = append(dst, 0xff)
+	return AppendUint64LE(dst, v)
+}
+
+func BitcoinUvarInt(b []byte) (uint64, int) {
+	if len(b) == 0 {
+		return 0, 0
+	}
+
+	switch b[0] {
+	case 0xff:
+		if len(b) < 9 {
+			return 0, -len(b)
+		}
+		return Uint64LE(b[1 : 1+8]), 9
+	case 0xfe:
+		if len(b) < 5 {
+			return 0, -len(b)
+		}
+		return uint64(Uint32LE(b[1 : 1+4])), 5
+	case 0xfd:
+		if len(b) < 3 {
+			return 0, -len(b)
+		}
+		return uint64(Uint16LE(b[1 : 1+2])), 3
+	default:
+		return uint64(b[0]), 1
+	}
+}
 
 func AppendUvarInt(dst []byte, n uint64) []byte {
 	for n >= 0x80 {

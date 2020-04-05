@@ -61,6 +61,62 @@ func TestAppendNumbers(t *testing.T) {
 	require.NoError(t, quick.Check(f, nil))
 }
 
+func TestBitcoinUvarInt(t *testing.T) {
+	a := func(a uint64, b uint32, c uint16, d uint8) bool {
+		buf := make([]byte, 0, binary.MaxVarintLen64-1)
+
+		buf = AppendBitcoinUvarInt(buf[:0], a)
+		ra, size := BitcoinUvarInt(buf)
+		if !assert.EqualValues(t, a, ra) || !assert.EqualValues(t, len(buf), size) {
+			return false
+		}
+
+		buf = AppendBitcoinUvarInt(buf[:0], uint64(b))
+		rb, size := BitcoinUvarInt(buf)
+		if !assert.EqualValues(t, b, rb) || !assert.EqualValues(t, len(buf), size) {
+			return false
+		}
+
+		buf = AppendBitcoinUvarInt(buf[:0], uint64(c))
+		rc, size := BitcoinUvarInt(buf)
+		if !assert.EqualValues(t, c, rc) || !assert.EqualValues(t, len(buf), size) {
+			return false
+		}
+
+		buf = AppendBitcoinUvarInt(buf[:0], uint64(d))
+		rd, size := BitcoinUvarInt(buf)
+		if !assert.EqualValues(t, d, rd) || !assert.EqualValues(t, len(buf), size) {
+			return false
+		}
+
+		return true
+	}
+
+	require.NoError(t, quick.Check(a, nil))
+}
+
+func TestAppendBitcoinUvarInt(t *testing.T) {
+	r, size := BitcoinUvarInt(nil)
+	require.EqualValues(t, 0, r)
+	require.EqualValues(t, 0, size)
+
+	r, size = BitcoinUvarInt([]byte{0xfc})
+	require.EqualValues(t, 0xfc, r)
+	require.EqualValues(t, 1, size)
+
+	r, size = BitcoinUvarInt([]byte{0xfd})
+	require.EqualValues(t, 0, r)
+	require.EqualValues(t, -1, size)
+
+	r, size = BitcoinUvarInt([]byte{0xfe})
+	require.EqualValues(t, 0, r)
+	require.EqualValues(t, -1, size)
+
+	r, size = BitcoinUvarInt([]byte{0xff})
+	require.EqualValues(t, 0, r)
+	require.EqualValues(t, -1, size)
+}
+
 func TestVarInt(t *testing.T) {
 	a := func(a uint64, b int64) bool {
 		buf := make([]byte, 0, binary.MaxVarintLen64)

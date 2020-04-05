@@ -31,6 +31,7 @@ func RandomSlice(dst []byte) []byte {
 
 	return dst
 }
+
 func ExtendSlice(dst []byte, size int) []byte {
 	n := size - cap(dst)
 	if n > 0 {
