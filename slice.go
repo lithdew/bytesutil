@@ -2,7 +2,6 @@ package bytesutil
 
 import (
 	"math/rand"
-	"reflect"
 	"unsafe"
 )
 
@@ -41,11 +40,9 @@ func ExtendSlice(dst []byte, size int) []byte {
 }
 
 func String(b []byte) string {
-	header := *(*reflect.SliceHeader)(unsafe.Pointer(&b))
-	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: header.Data, Len: header.Len}))
+	return *(*string)(unsafe.Pointer(&b))
 }
 
 func Slice(s string) []byte {
-	header := *(*reflect.StringHeader)(unsafe.Pointer(&s))
-	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: header.Data, Len: header.Len, Cap: header.Len}))
+	return (*(**[1 << 30]byte)(unsafe.Pointer(&s)))[:len(s):len(s)]
 }
